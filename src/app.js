@@ -1,30 +1,57 @@
 import express from "express";
-import { sabores, tamanhos, pedidos } from "./dados.js";
-import {
-  buscarSaborPorId,
-  buscarTamanhoPorId,
-  buscarIndexPedido,
-  mapearPedidosComNomes,
-} from "./funcoesAuxiliares.js";
-
+import conexao from "../infra/conexao.js";
 const app = express();
 
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Index");
+app.get("/pedidos", (req, res) => {
+  const sql = "SELECT * FROM pedidos;";
+  conexao.query(sql, (error, result) => {
+    if (error) {
+      console.log(error);
+      res.status(404).json({ error: error });
+    } else {
+      res.status(200).json(result);
+    }
+  });
+});
+
+app.get("/pedidos/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "SELECT * FROM pedidos WHERE id=?;";
+  conexao.query(sql, id, (error, result) => {
+    const linha = result[0];
+    if (error) {
+      console.log(error);
+      res.status(404).json({ error: error });
+    } else {
+      res.status(200).json(linha);
+    }
+  });
 });
 
 app.get("/sabores", (req, res) => {
-  res.status(200).send(sabores);
+  const sql = "SELECT * FROM sabores;";
+  conexao.query(sql, (error, result) => {
+    if (error) {
+      console.log(error);
+      res.status(404).json({ error: error });
+    } else {
+      res.status(200).json(result);
+    }
+  });
 });
 
 app.get("/tamanhos", (req, res) => {
-  res.status(200).send(tamanhos);
-});
-
-app.get("/pedidos", (req, res) => {
-  res.status(200).send(mapearPedidosComNomes(pedidos));
+  const sql = "SELECT * FROM tamanhos;";
+  conexao.query(sql, (error, result) => {
+    if (error) {
+      console.log(error);
+      res.status(404).json({ error: error });
+    } else {
+      res.status(200).json(result);
+    }
+  });
 });
 
 app.get("/pedidos/:id", (req, res) => {
@@ -35,34 +62,43 @@ app.get("/pedidos/:id", (req, res) => {
 });
 
 app.post("/pedidos", (req, res) => {
-  if (!req.body.saborId || !req.body.tamanhoId) {
-    res.status(400).send("Os campos saborId e tamanhoId são obrigatórios");
-    return;
-  }
-  const novoPedido = {
-    id: pedidos.length + 1,
-    saborId: req.body.saborId,
-    tamanhoId: req.body.tamanhoId,
-  };
-  pedidos.push(novoPedido);
-  res.status(201).send(novoPedido);
+  const pedido = req.body;
+  const sql = "INSERT INTO pedidos SET ?";
+  conexao.query(sql, pedido, (error, result) => {
+    if (error) {
+      console.log(error);
+      res.status(400).json({ error: error });
+    } else {
+      res.status(201).json(result);
+    }
+  });
 });
 
 app.delete("/pedidos/:id", (req, res) => {
-  let index = buscarIndexPedido(req.params.id);
-  pedidos.splice(index, 1);
-  res.send("Pedido excluido com sucesso!");
+  const id = req.params.id;
+  const sql = "DELETE FROM pedidos WHERE id=?;";
+  conexao.query(sql, id, (error, result) => {
+    if (error) {
+      console.log(error);
+      res.status(404).json({ error: error });
+    } else {
+      res.status(200).json(result);
+    }
+  });
 });
 
 app.put("/pedidos/:id", (req, res) => {
-  let index = buscarIndexPedido(req.params.id);
-  pedidos[index].saborId = req.body.saborId;
-  pedidos[index].tamanhoId = req.body.tamanhoId;
-  res.send(
-    `Seu pedido foi alterado para sabor: ${buscarSaborPorId(
-      req.body.saborId
-    )} e tamanho: ${buscarTamanhoPorId(req.body.tamanhoId)}`
-  );
+  const id = req.params.id;
+  const pedido = req.body;
+  const sql = "UPDATE pedidos SET ? WHERE id=?";
+  conexao.query(sql, [pedido, id], (error, result) => {
+    if (error) {
+      console.log(error);
+      res.status(400).json({ error: error });
+    } else {
+      res.status(200).json(result);
+    }
+  });
 });
 
 export default app;
