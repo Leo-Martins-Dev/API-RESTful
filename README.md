@@ -1,4 +1,4 @@
-# API Restful de Pizzaria
+# API Restful de Pizzaria 🍕
 
 Esta é uma API Restful de uma pizzaria desenvolvida em Node.js, utilizando o banco de dados MySQL para armazenar dados persistentes. A API permite realizar operações CRUD (Create, Read, Update, Delete) relacionadas a pedidos, sabores e tamanhos de pizza.
 
